@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 @Service
 public class LiveObjectsService {
     private static final String API_URL = "https://liveobjects.orange-business.com/api/v1/";
-    private static final String API_KEY = "YOUR_API_KEY"; // Remplace avec ta clé API
+    private static final String API_KEY = ""; // Mets ta clé API ici
 
     private final RestTemplate restTemplate;
     private final DecoderService decoderService;
@@ -29,13 +29,18 @@ public class LiveObjectsService {
         ResponseEntity<JsonNode> response = restTemplate.exchange(url, HttpMethod.GET, entity, JsonNode.class);
 
         if (response.getBody() != null) {
-            // Récupération du payload brut
-            String hexPayload = response.getBody().get("value").asText();
+            // Récupérer le payload
+            String hexPayload = response.getBody().get("value").get("payload").asText();
 
-            // Décodage des données
-            return decoderService.decodePayload(hexPayload);
+            // Récupérer la tension de la batterie
+            double batteryVoltage = response.getBody().get("value").get("powerSources").get("diposBattery").get("value").asDouble();
+
+            // Récupérer le mode d'alimentation
+            String powerMode = response.getBody().get("value").get("currentPowerMode").asText();
+
+            // Décoder les valeurs du capteur
+            return decoderService.decodePayload(hexPayload, batteryVoltage, powerMode);
         }
         return null;
     }
 }
-
