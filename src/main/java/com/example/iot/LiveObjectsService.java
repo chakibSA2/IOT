@@ -4,43 +4,71 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class LiveObjectsService {
-    private static final String API_URL = "https://liveobjects.orange-business.com/api/v1/";
-    private static final String API_KEY = ""; // Mets ta clé API ici
+    private static final String API_URL = "https://liveobjects.orange-business.com/api/v0/data/streams/";
+    private static final String API_KEY = "";
 
     private final RestTemplate restTemplate;
     private final DecoderService decoderService;
+    private final ObjectMapper objectMapper;
 
     public LiveObjectsService(DecoderService decoderService) {
         this.restTemplate = new RestTemplate();
         this.decoderService = decoderService;
+        this.objectMapper = new ObjectMapper();
     }
 
-    public SensorData getDecodedData(String deviceId) {
-        String url = API_URL + "data/streams/" + deviceId;
+    public List<SensorData> getDecodedData(String deviceId) {
+        String url = API_URL + deviceId + "?limit=100";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("X-API-Key", API_KEY);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
-        ResponseEntity<JsonNode> response = restTemplate.exchange(url, HttpMethod.GET, entity, JsonNode.class);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 
-        if (response.getBody() != null) {
-            // Récupérer le payload
-            String hexPayload = response.getBody().get("value").get("payload").asText();
+        List<SensorData> sensorDataList = new ArrayList<>();
 
-            // Récupérer la tension de la batterie
-            double batteryVoltage = response.getBody().get("value").get("powerSources").get("diposBattery").get("value").asDouble();
+        try {
+            JsonNode rootNode = objectMapper.readTree(response.getBody());
 
-            // Récupérer le mode d'alimentation
-            String powerMode = response.getBody().get("value").get("currentPowerMode").asText();
+            for (JsonNode messageNode : rootNode) {
+                if (messageNode.has("value")) {
+                    JsonNode valueNode = messageNode.get("value");
 
-            // Décoder les valeurs du capteur
-            return decoderService.decodePayload(hexPayload, batteryVoltage, powerMode);
+                    // Vérifie si le message contient une erreur
+                    if (valueNode.has("error")) {
+                        System.out.println("⚠️ Erreur dans le message : " + valueNode.get("error").asText());
+                        continue;
+                    }
+
+                    // Récupérer le payload
+                    if (valueNode.has("payload")) {
+                        String hexPayload = valueNode.get("payload").asText();
+                        SensorData sensorData = decoderService.decodePayload(hexPayload);
+
+                        if (sensorData != null) {
+                            sensorDataList.add(sensorData);
+                        }
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors du traitement des données LiveObjects", e);
         }
-        return null;
+
+        if (sensorDataList.isEmpty()) {
+            throw new RuntimeException("Aucune donnée valide reçue pour le capteur " + deviceId);
+        }
+
+        return sensorDataList;
     }
 }

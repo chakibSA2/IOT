@@ -1,7 +1,8 @@
 package com.example.iot;
 
 import org.springframework.web.bind.annotation.*;
-
+import java.util.List;
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/liveobjects")
 public class LiveObjectsController {
@@ -13,8 +14,7 @@ public class LiveObjectsController {
     }
 
     @GetMapping("/decoded/{deviceId}")
-    public SensorData getDecodedData(@PathVariable String deviceId) {
+    public List<SensorData> getDecodedData(@PathVariable String deviceId) {
         return liveObjectsService.getDecodedData(deviceId);
     }
 }
-

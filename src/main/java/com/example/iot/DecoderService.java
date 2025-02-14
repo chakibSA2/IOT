@@ -5,18 +5,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class DecoderService {
 
-    public SensorData decodePayload(String hexPayload, double batteryVoltage, String powerMode) {
-        byte[] bytes = hexStringToByteArray(hexPayload);
+    public SensorData decodePayload(String hexPayload) {
+        try {
+            byte[] bytes = hexStringToByteArray(hexPayload);
 
-        // Décodage des valeurs selon la structure du capteur
-        int temperatureRaw = ((bytes[1] & 0xFF) << 8) | (bytes[2] & 0xFF);
-        double temperature = temperatureRaw / 10.0; // Exemple : 298 → 29.8°C
+            double temperature = ((bytes[0] & 0xFF) + (bytes[1] & 0xFF) / 100.0);
+            int humidity = (bytes[2] & 0xFF);
+            int co2 = ((bytes[3] & 0xFF) << 8) | (bytes[4] & 0xFF);
+            double batteryVoltage = ((bytes[5] & 0xFF) + (bytes[6] & 0xFF) / 100.0);
 
-        int humidity = bytes[4] & 0xFF; // Humidité en pourcentage
+            String powerMode = (bytes[7] == 0x01) ? "Battery" : "External Power";
 
-        int co2 = ((bytes[6] & 0xFF) << 8) | (bytes[7] & 0xFF); // CO₂ en ppm
-
-        return new SensorData(temperature, humidity, co2, batteryVoltage, powerMode);
+            return new SensorData(temperature, humidity, co2, batteryVoltage, powerMode);
+        } catch (Exception e) {
+            System.out.println("⚠️ Erreur de décodage du payload : " + hexPayload);
+            return null;
+        }
     }
 
     private byte[] hexStringToByteArray(String hex) {
@@ -29,4 +33,3 @@ public class DecoderService {
         return data;
     }
 }
-
