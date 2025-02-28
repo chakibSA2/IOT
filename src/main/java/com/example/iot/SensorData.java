@@ -1,7 +1,5 @@
 package com.example.iot;
 
-import java.sql.Timestamp;
-
 public class SensorData {
     private Double temperature;
     private Integer humidity;
@@ -14,8 +12,9 @@ public class SensorData {
     private Boolean motionDetected;
     private String timestamp;
 
-    public SensorData(Double temperature, Integer humidity, Double pressure, Integer co2, Integer cov, Double luminosity,
-                      Double batteryVoltage, String powerMode, Boolean motionDetected, String timestamp) {
+    public SensorData(Double temperature, Integer humidity, Double pressure, Integer co2, Integer cov,
+            Double luminosity,
+            Double batteryVoltage, String powerMode, Boolean motionDetected, String timestamp) {
         this.temperature = temperature;
         this.humidity = humidity;
         this.pressure = pressure;
@@ -32,15 +31,25 @@ public class SensorData {
         return timestamp;
     }
 
-    public Double getTemperature() { return temperature; }
-    public Integer getHumidity() { return humidity; }
-    public Double getPressure() { return pressure; }
+    public Double getTemperature() {
+        return temperature;
+    }
+
+    public Integer getHumidity() {
+        return humidity;
+    }
+
+    public Double getPressure() {
+        return pressure;
+    }
 
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 
-    public Integer getCo2() { return co2; }
+    public Integer getCo2() {
+        return co2;
+    }
 
     public void setTemperature(Double temperature) {
         this.temperature = temperature;
@@ -78,11 +87,25 @@ public class SensorData {
         this.motionDetected = motionDetected;
     }
 
-    public Integer getCov() { return cov; }
-    public Double getLuminosity() { return luminosity; }
-    public Double getBatteryVoltage() { return batteryVoltage; }
-    public String getPowerMode() { return powerMode; }
-    public Boolean getMotionDetected() { return motionDetected; }
+    public Integer getCov() {
+        return cov;
+    }
+
+    public Double getLuminosity() {
+        return luminosity;
+    }
+
+    public Double getBatteryVoltage() {
+        return batteryVoltage;
+    }
+
+    public String getPowerMode() {
+        return powerMode;
+    }
+
+    public Boolean getMotionDetected() {
+        return motionDetected;
+    }
 
     @Override
     public String toString() {

@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,15 +24,14 @@ public class PythonDecoderService {
             ProcessBuilder processBuilder = new ProcessBuilder(
                     PYTHON_EXECUTABLE_PATH, PYTHON_SCRIPT_PATH,
                     "-a", "3",
-                    "0,1,4,OCC",  // Détection de mouvement
-                    "1,10,7,T",   // Température
-                    "2,100,6,H",  // Humidité
+                    "0,1,4,OCC", // Détection de mouvement
+                    "1,10,7,T", // Température
+                    "2,100,6,H", // Humidité
                     "3,10,6,CO2", // CO2
                     "4,10,6,COV", // COV
                     "5,10,6,LUX", // Luminosité
-                    "6,10,6,P",   // Pression
-                    "-if", hexPayload
-            );
+                    "6,10,6,P", // Pression
+                    "-if", hexPayload);
 
             processBuilder.redirectErrorStream(true);
             Process process = processBuilder.start();
@@ -66,14 +64,16 @@ public class PythonDecoderService {
                 Map<String, SensorData> sensorDataMap = new HashMap<>();
 
                 for (JsonNode dataNode : rootNode.get("dataset")) {
-                    String timestamp = dataNode.has("data_absolute_timestamp") ?
-                            dataNode.get("data_absolute_timestamp").asText() : "N/A";
+                    String timestamp = dataNode.has("data_absolute_timestamp")
+                            ? dataNode.get("data_absolute_timestamp").asText()
+                            : "N/A";
                     String label = dataNode.get("data").get("label_name").asText();
                     double value = dataNode.get("data").get("value").asDouble();
 
                     // Clé unique basée sur le timestamp pour grouper les mesures
                     if (!sensorDataMap.containsKey(timestamp)) {
-                        sensorDataMap.put(timestamp, new SensorData(null, null, null, null, null, null, null, null, null,null));
+                        sensorDataMap.put(timestamp,
+                                new SensorData(null, null, null, null, null, null, null, null, null, null));
                     }
 
                     SensorData sensorData = sensorDataMap.get(timestamp);
