@@ -1,84 +1,148 @@
 <template>
-  <div class="sensor-data">
-    <h2>Données du Capteur</h2>
+  <div class="sensor-data-container">
+    <h2 class="title">📡 Données du Capteur</h2>
 
-    <div v-if="loading">Chargement des données...</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
+    <!-- 📌 Affichage du chargement -->
+    <div v-if="loading" class="loading">
+      <div class="loader"></div>
+      <p>Chargement des données...</p>
+    </div>
+
+    <!-- 📌 Affichage des erreurs -->
+    <div v-else-if="error" class="error">
+      <p>⚠️ {{ error }}</p>
+    </div>
+
+    <!-- 📌 Affichage des données -->
     <div v-else>
-      <table>
-        <thead>
-          <tr>
-            <th>Température (°C)</th>
-            <th>Humidité (%)</th>
-            <th>CO₂ (ppm)</th>
-            <th>Batterie (V)</th>
-            <th>Alimentation</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(data, index) in sensorData" :key="index">
-            <td>{{ data.temperature }}</td>
-            <td>{{ data.humidity }}</td>
-            <td>{{ data.co2 }}</td>
-            <td>{{ data.batteryVoltage }}</td>
-            <td>{{ data.powerMode }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <button class="analyze-btn" @click="goToAnalysis">📊 Voir l'analyse</button>
+
+      <div class="sensor-grid">
+        <div v-for="(capture, index) in sensorData" :key="index" class="sensor-card">
+          <div class="card-header">
+            <h3>📡 Capture {{ index + 1 }}</h3>
+            <small class="timestamp">🕒 {{ formatTimestamp(capture.timestamp) }}</small>
+          </div>
+          <div class="card-body">
+            <p v-for="(value, label) in getValidValues(capture)" :key="label">
+              {{ getIcon(label) }} <strong>{{ getLabel(label) }} :</strong> {{ value }}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import apiClient from '../service/api'
+import apiClient from '@/service/api';
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useSensorStore } from '@/store/sensorStore';
 
 export default {
-  data() {
-    return {
-      sensorData: [],
-      loading: true,
-      error: null
-    };
-  },
-  methods: {
-    async fetchSensorData() {
-      this.loading = true;
+  setup() {
+    const router = useRouter();
+    const sensorStore = useSensorStore();
+
+    // 📌 Définition des variables réactives
+    const sensorData = ref([]);
+    const loading = ref(true);
+    const error = ref(null);
+
+    // 📌 Fonction pour récupérer les données du capteur
+    const fetchSensorData = async () => {
+      loading.value = true;
+      error.value = null; // Réinitialisation de l'erreur
       try {
         const response = await apiClient.get('/decoded/urn:lo:nsid:lora:70B3D5E75E029068');
-        this.sensorData = response.data;
+        if (response.data && response.data.length > 0) {
+          sensorData.value = response.data; // ✅ Mise à jour correcte de `sensorData`
+        } else {
+          error.value = "Aucune donnée disponible.";
+        }
       } catch (err) {
-        this.error = "Erreur lors du chargement des données.";
+        error.value = "Impossible de récupérer les données.";
         console.error(err);
       } finally {
-        this.loading = false;
+        loading.value = false;
       }
-    }
-  },
-  mounted() {
-    this.fetchSensorData();
+    };
+
+    // 📌 Fonction pour aller à la page d'analyse
+    const goToAnalysis = () => {
+      sensorStore.setSensorData(sensorData.value); // ✅ Stockage des données dans Pinia
+      router.push('/analysis');
+    };
+
+    // 📌 Fonction pour formater le timestamp en heure lisible
+    const formatTimestamp = (timestamp) => {
+      return new Date(timestamp).toLocaleTimeString();
+    };
+
+    // 📌 Fonction pour filtrer les valeurs nulles ou non valides
+    const getValidValues = (capture) => {
+      return Object.fromEntries(
+        Object.entries(capture).filter(([_, value]) => value !== null && value !== undefined)
+      );
+    };
+
+    // 📌 Fonction pour associer un label aux valeurs
+    const getLabel = (key) => {
+      const labels = {
+        temperature: "Température (°C)",
+        humidity: "Humidité (%)",
+        co2: "CO₂ (ppm)",
+        cov: "COV (Indice)",
+        luminosity: "Luminosité (Lux)"
+      };
+      return labels[key] || key;
+    };
+
+    // 📌 Fonction pour associer une icône aux valeurs
+    const getIcon = (key) => {
+      const icons = {
+        temperature: "🌡️",
+        humidity: "💧",
+        co2: "🌿",
+        cov: "⚗️",
+        luminosity: "💡"
+      };
+      return icons[key] || "🔹";
+    };
+
+    // 📌 Exécuter la récupération des données au montage
+    onMounted(fetchSensorData);
+
+    // 📌 Retourner toutes les valeurs pour qu'elles soient accessibles dans le template
+    return {
+      sensorData,
+      loading,
+      error,
+      goToAnalysis,
+      formatTimestamp,
+      getValidValues,
+      getLabel,
+      getIcon
+    };
   }
 };
 </script>
 
 <style scoped>
-.sensor-data {
-  padding: 20px;
-  font-family: Arial, sans-serif;
+.analyze-btn {
+  background: #1e88e5;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background 0.3s;
 }
-.error {
-  color: red;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-th, td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
-}
-th {
-  background-color: #f4f4f4;
+
+.analyze-btn:hover {
+  background: #1565c0;
 }
 </style>

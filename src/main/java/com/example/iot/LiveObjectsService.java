@@ -12,19 +12,19 @@ import java.util.List;
 @Service
 public class LiveObjectsService {
     private static final String API_URL = "https://liveobjects.orange-business.com/api/v0/data/streams/";
-    private static final String API_KEY = "";
+    private static final String API_KEY = "37bd0b0f0e0d4f74a234bb350b7b65d6";
 
     private final RestTemplate restTemplate;
-    private final DecoderService decoderService;
+    private final PythonDecoderService pythonDecoderService;
     private final ObjectMapper objectMapper;
 
-    public LiveObjectsService(DecoderService decoderService) {
+    public LiveObjectsService(PythonDecoderService pythonDecoderService) {
         this.restTemplate = new RestTemplate();
-        this.decoderService = decoderService;
+        this.pythonDecoderService = pythonDecoderService;
         this.objectMapper = new ObjectMapper();
     }
 
-    public List<SensorData> getDecodedData(String deviceId) {
+    public List<SensorData> getDecodedSensorData(String deviceId) {
         String url = API_URL + deviceId + "?limit=100";
 
         HttpHeaders headers = new HttpHeaders();
@@ -43,30 +43,21 @@ public class LiveObjectsService {
                 if (messageNode.has("value")) {
                     JsonNode valueNode = messageNode.get("value");
 
-                    // Vérifie si le message contient une erreur
-                    if (valueNode.has("error")) {
-                        System.out.println("⚠️ Erreur dans le message : " + valueNode.get("error").asText());
-                        continue;
-                    }
-
-                    // Récupérer le payload
                     if (valueNode.has("payload")) {
                         String hexPayload = valueNode.get("payload").asText();
-                        SensorData sensorData = decoderService.decodePayload(hexPayload);
 
-                        if (sensorData != null) {
-                            sensorDataList.add(sensorData);
-                        }
+                        // 🔥 Appel du décodeur Python pour obtenir les données
+                        List<SensorData> decodedData = pythonDecoderService.decodePayload(hexPayload);
+                        sensorDataList.addAll(decodedData);
                     }
                 }
             }
-
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors du traitement des données LiveObjects", e);
         }
 
         if (sensorDataList.isEmpty()) {
-            throw new RuntimeException("Aucune donnée valide reçue pour le capteur " + deviceId);
+            throw new RuntimeException("Aucune donnée capteur trouvée pour l'appareil " + deviceId);
         }
 
         return sensorDataList;
