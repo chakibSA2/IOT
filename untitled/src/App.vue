@@ -9,7 +9,7 @@
     </header>
 
     <div class="content">
-      <router-view /> <!-- 🔥 Affiche dynamiquement la page courante -->
+      <router-view /> 
     </div>
   </div>
 </template>
