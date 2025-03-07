@@ -15,9 +15,9 @@
   justify-content: center;
   flex-wrap: wrap;
   gap: 20px;
-  width: 100%;
-  max-width: 1200px;
-  /* Limite la largeur totale */
+  width: 2500px;
+  max-width: 2500px;
+
 }
 
 /* Style des cartes capteurs */

@@ -26,7 +26,7 @@ public class SensorData {
         this.motionDetected = motionDetected;
         this.timestamp = timestamp;
     }
-
+public SensorData(){}
     public String getTimestamp() {
         return timestamp;
     }

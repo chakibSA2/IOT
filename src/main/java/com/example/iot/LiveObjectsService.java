@@ -17,15 +17,14 @@ import java.util.List;
 @Service
 public class LiveObjectsService {
     private static final String API_URL = "https://liveobjects.orange-business.com/api/v0/data/streams/";
-    private static final String API_KEY = "37bd0b0f0e0d4f74a234bb350b7b65d6";
+    private static final String API_KEY = "19bd9ad1fc984239bf900e89d0754a28";
     private static final String DATA_FILE = "sensor_data.json";
 
     private final RestTemplate restTemplate;
     private final PythonDecoderService pythonDecoderService;
     private final ObjectMapper objectMapper;
 
-    private final List<String> deviceIds = List.of("device1", "device2", "device3"); // Liste des IDs des capteurs
-
+    private final List<String> deviceIds = List.of("device1", "device2", "device3");
     public LiveObjectsService(PythonDecoderService pythonDecoderService) {
         this.restTemplate = new RestTemplate();
         this.pythonDecoderService = pythonDecoderService;
@@ -44,7 +43,7 @@ public class LiveObjectsService {
         return sensorDataList;
     }
 
-    @Scheduled(fixedRate = 600000) // Exécuter toutes les 600 secondes
+    @Scheduled(fixedRate = 600000)
     public void updateSensorDataAutomatically() {
         System.out.println("Mise à jour automatique des données...");
         List<SensorData> allSensorData = loadFromFile();

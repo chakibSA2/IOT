@@ -3,7 +3,6 @@
     <div v-for="(capture, index) in data" :key="index" class="sensor-card">
       <div class="card-header">
         <h3>📡 Capture {{ index + 1 }}</h3>
-        <small class="timestamp">🕒 {{ formatTimestamp(capture.timestamp) }}</small>
       </div>
       <div class="card-body">
         <p v-for="(value, label) in capture" :key="label">

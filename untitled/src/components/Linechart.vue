@@ -22,7 +22,6 @@ export default {
 
     const renderChart = () => {
       if (chartInstance) {
-        chartInstance.destroy(); // 🔥 Détruire l'ancien graphique avant d'en créer un nouveau
       }
 
       chartInstance = new Chart(chartCanvas.value, {

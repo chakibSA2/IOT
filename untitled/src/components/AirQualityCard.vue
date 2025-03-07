@@ -22,7 +22,7 @@ export default {
     getQualityColor() {
       if (this.co2Value > 1000 || this.covValue > 100) return "#e74c3c"; // Rouge
       if (this.co2Value > 600 || this.covValue > 50) return "#f39c12"; // Orange
-      return "#2ecc71"; // Vert
+      return "#2ecc71"; 
     }
   }
 };
